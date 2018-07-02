@@ -1,0 +1,410 @@
+import static java.lang.System.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Scanner;
+public class CW2 {
+    public static void main(String[] args){
+        Scanner sc = new Scanner(System.in);
+        int reRoll;
+        int stats[];
+        int bonus[];
+//Getting player name, character and Level
+        System.out.println("Enter the player name");
+        String playerName = sc.nextLine();
+        //Creating the file that has characters
+        try {
+            FileWriter fw = new FileWriter("character.txt");
+            PrintWriter pw = new PrintWriter(fw);
+            pw.println(" 1.Barbarian 2.Bard\n 3.Cleric 4.Druid\n 5.Fighter 6.Monk\n 7.Paladin 8.Ranger\n 9.Rogue 10.Sorcerer\n11.Warlock 12.Wizard\n");
+            pw.close();
+
+        } catch (IOException e) {
+            System.out.println("Error");
+        }
+       // Reading the file that has characters
+        try {
+            FileReader fr = new FileReader("character.txt");
+            BufferedReader br = new BufferedReader(fr);
+            String read;
+            while ((read = br.readLine()) != null) {
+                System.out.println(read);
+            }
+            br.close();
+        } catch (IOException e) {
+            System.out.println("File not found");
+            System.exit(0);
+        }
+            System.out.print("Enter the number of the character you choose : ");
+            int charName = sc.nextInt();
+            if (charName > 12 || charName < 1) {
+                System.out.println("Error : Invalid Number ");
+                System.exit(0);
+            }
+            System.out.println("Enter level : ");
+            int chaLevel = sc.nextInt();
+            if (chaLevel > 17 || chaLevel < 1) {
+                System.out.println("Error : Invalid Number ");
+                System.exit(0);
+            }
+//Creating the character object
+            Character character = new Character();
+            character.level = chaLevel;
+//Prompting for a method to get stats
+            System.out.println("Choose a method to generate stats :\nPress 1 for user input\nPress 2 for 4d6 minus the minimum dice\nPress 3 for 4d6 with conditional add of dice\nPress 4 for IX method ");
+            int diceChoice = sc.nextInt();
+            do {
+                character.hitPoints = 0;
+                int sum = 0;
+//Initializing arrays
+                stats = new int[6];
+                bonus = new int[6];
+                String attributes[] = new String[]{"STR", "DEX", "CON", "INT", "WIS", "CHA"};
+                character.characterName = new String[]{"Barbarian", "Bard", "Cleric", "Druid", "Fighter",
+                        "Monk", "Paladin", "Ranger", "Rogue", "Sorcerer",
+                        "Warlock", "Wizard"};
+                character.level = chaLevel;
+                character.hitDice = new int[]{12, 8, 8, 8, 10, 8, 10, 10, 8, 6, 8, 6};
+                character.bAB = 0;
+                character.combat = 0;
+                character.damage = 0;
+//Getting stats
+                if (diceChoice == 4) {
+                    stats = IX(stats, charName);
+
+                } else if (diceChoice == 1) {
+                    for (int i = 0; i < stats.length; i++) {
+                        System.out.println("Enter " + attributes[i]);
+                        stats[i] = userInput();
+                    }
+                } else if (diceChoice == 2) {
+                    for (int i = 0; i < stats.length; i++) {
+                        stats[i] = dropper();
+                    }
+                } else {
+                    for (int i = 0; i < stats.length; i++) {
+                        stats[i] = drop();
+                    }
+                }
+                for (int i = 0; i < stats.length; i++) {
+                    bonus[i] = (stats[i] > 10 ? ((stats[i]) % 2 == 0 ? ((stats[i] - 10) / 2) : ((stats[i] - 11) / 2)) :
+                            ((stats[i]) % 2 == 0 ? ((stats[i] - 10) / 2) : ((stats[i] - 11) / 2)));
+                }
+                //Printing Output
+                System.out.println("Player Name :" + "[" + playerName + "]");
+                System.out.println("Character Name :" + "[" + character.characterName[charName - 1] +
+                        "]");
+                System.out.println("Level :" + "[" + character.level + "]");
+                for (int i = 0; i < attributes.length; i++) {
+                    if (stats[i] > 11) {
+                        System.out.println(attributes[i] + " :" + "[" + stats[i] + "]" + " [+" + bonus[i] + "]");
+                    } else {
+                        System.out.println(attributes[i] + " :" + "[" + stats[i] + "]" + " [" + bonus[i] + "]");
+                    }
+                }
+                //Calculating HP
+                for (int i = 1; i <= chaLevel; i++) {
+                    sum += (int) (Math.random() * 1000 % (character.hitDice[charName - 1]) + 1) +
+                            bonus[2];
+                    if (sum <= 0) {
+                        character.hitPoints += 1;
+                    } else {
+                        character.hitPoints += sum;
+                    }
+                }
+                System.out.println("HP : " + "[" + character.hitPoints + "]");
+                character.attBonus = new int[]{bonus[0], bonus[1], bonus[2], bonus[3], bonus[4],
+                        bonus[5]};
+                //Asking for re roll
+                System.out.println("Do you want to re roll?\n 1.Yes\n 2.No");
+                reRoll = sc.nextInt();
+                if (reRoll < 1 || reRoll > 2) {
+                    System.out.println("Invalid number");
+                    System.exit(0);
+                }
+            }
+            while (reRoll == 1);
+            int reRoll2;
+            //Creating the two linked lists that holds the selected skills and descriptions
+            LinkedList classSkills = new LinkedList();
+            do {
+                LinkedList<String> chaSkill = new LinkedList<>();
+
+                LinkedList<String> chaDesc = new LinkedList<>();
+                String[] allSkills = new String[]{"Acrobatics", "Arcana", "Athletics", "Bluff", "Diplomacy",
+                        "Dungeoneering", "Endurance", "Heal",
+                        "History", "Insight", "Intimidate", "Nature", "Perception", "Religion", "Stealth",
+                        "Streetwise", "Thievery"};
+                String[] descript = new String[]{"Freeing yourself from grapples and the like", "Recall lore about magic items and spells", "Shoving creatures",
+                        "Disguise emotions", "Power to influence", "Recognize an underground hazard",
+                        "Hold your breath for a long time", "Stabilizing someone",
+                        "Remembering anniversaries of important happenings", "Getting the meaning of underlying messages", "Torturing someone",
+                        "Detecting strange weather changes", "Finding minute details", "Performing a ritual according to specification", "Hiding",
+                        "Ability to find what's going on", "Open locks"};
+                //Creating the file that has skills
+                try {
+                    FileWriter fw = new FileWriter("test.txt");
+                    PrintWriter pw = new PrintWriter(fw);
+                    pw.println("Skills : ");
+                    pw.println("1.Acrobatics 2.Arcana 3.Athletics 4.Bluff \n5.Diplomacy 6.Dungeoneering 7.Endurance 8.Heal \n9.History 10.Insight 11.Intimidate 12.Nature\n13.Perception 14.Religion 15.Stealth 16.Streetwise \n17.Thievery");
+                    pw.close();
+                } catch (IOException e) {
+                    System.out.println("Error");
+                }
+                //Reading the file that has skills
+                try {
+                    FileReader fr = new FileReader("test.txt");
+                    BufferedReader br = new BufferedReader(fr);
+                    String fread;
+                    while ((fread = br.readLine()) != null) {
+                        System.out.println(fread);
+                    }
+                    br.close();
+                } catch (IOException e) {
+                    System.out.println("File not found");
+                    System.exit(0);
+                }
+                //Calculating the skill points
+                System.out.println("Choose " + character.level + " skills ");
+                for (int i = 0; i < chaLevel; i++) {
+                    int choose = sc.nextInt();
+                    chaSkill.add(allSkills[choose - 1]);
+                    chaDesc.add(descript[choose - 1]);
+                    System.out.println(allSkills[choose - 1]);
+                }
+                int[] rank = new int[chaSkill.size()];
+                int[] grant = new int[]{4, 6, 2, 4, 2, 4, 2, 6, 8, 2, 2, 2};
+                int skillTot = 4 * (grant[charName - 1] + character.attBonus[3]);
+                int skillPoints = 0;
+                if (skillTot <= 0) {
+                    skillPoints += 1;
+                } else {
+                    skillPoints = skillTot;
+                }
+                for (int i = 2; i <= chaLevel; i++) {
+
+                    int skillSum = grant[charName - 1] + character.attBonus[3];
+                    if (skillSum <= 0) {
+                        skillPoints += 1;
+                    } else {
+                        skillPoints += skillSum;
+                    }
+                }
+                //Ranking up the skills we choose
+                character.skillPoints = skillPoints;
+                int skillRank;
+                System.out.println("Skill points : " + " [" + skillPoints + "]");
+                for (int j = 0; j < chaSkill.size(); j++) {
+                    System.out.println("To give 1 rank for " + chaSkill.get(j) + " Press " + (j + 1));
+                }
+                int count = 0;
+                for (int i = skillPoints; i > 0; i--) {
+                    count++;
+                    int exit = 0;
+                    skillRank = sc.nextInt();
+                    do {
+                        if (rank[skillRank - 1] >= (chaLevel + 3)) {
+                            System.out.println("Choose another skill or press 1 to exit");
+                            exit = sc.nextInt();
+                            if (exit == 1) {
+                                break;
+                            } else {
+                                skillRank = sc.nextInt();
+                            }
+                        }
+                    } while (rank[skillRank - 1] >= (chaLevel + 3));
+                    if (exit == 1) {
+                        break;
+                    }
+                    rank[skillRank - 1] += 1;
+                    System.out.println("skill points remaining" + "[" + (skillPoints - count) + "]");
+                }
+                //Calculating BAB
+                //for combat oriented characters
+                if (charName == 1 || charName == 5 || charName == 7 || charName == 8) {
+                    character.bAB = chaLevel;
+                //For average combat characters
+                } else if (charName == 2 || charName == 3 || charName == 4 || charName == 6 ||
+                        charName == 9) {
+                    character.bAB = (chaLevel * 3) / 4;
+                //For combat adverse characters
+                } else if (charName == 10 || charName == 11 || charName == 12) {
+                    character.bAB = chaLevel / 2;
+                }
+                //Calculating combat and damage
+                character.combat = character.bAB + bonus[0];
+                character.damage = bonus[0];
+                LinkedList<Skills> skill = new LinkedList<>();
+                for (int i = 0; i < chaSkill.size(); i++) {
+                    skill.add(new Skills(chaSkill.get(i), rank[i], chaDesc.get(i)));
+                }
+                for (Skills element : skill)
+
+                    System.out.println(element + "\n");
+                System.out.println("skill points remaining: " + "[" + (skillPoints - count + 1) + "]");
+
+                try {
+                    FileWriter fw = new FileWriter("stats.txt");
+                    PrintWriter pw = new PrintWriter(fw);
+                    pw.println("Player Name : " + playerName);
+                    pw.println("Level : " + chaLevel);
+                    pw.println("Character Name : " + character.characterName[charName - 1]);
+                    pw.println("Character BAB : " + character.bAB);
+                    pw.println("Character combat : " + character.combat);
+                    pw.println("Character damage : " + character.damage);
+                    pw.println("Skills: ");
+                    for (int i = 0; i < skill.size(); i++) {
+                        pw.println(skill.get(i));
+                    }
+                    pw.close();
+                    System.out.println("File created");
+                } catch (IOException e) {
+                    out.println("Error");
+                }
+                try {
+                    FileReader fr = new FileReader("stats.txt");
+                    BufferedReader br = new BufferedReader(fr);
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        System.out.println(line);
+                    }
+                    br.close();
+                } catch (IOException e) {
+                    System.out.println("File not found");
+                }
+                System.out.println("Press 1 to Quit\nPress 2 to select another skill class");
+                reRoll2 = sc.nextInt();
+                classSkills.add(skill);
+            } while (reRoll2 == 2);
+    }
+
+    public static int dropper() {
+        int sum = 0;
+        int[] dice = new int[4];
+        for (int i = 0; i < dice.length; i++) {
+            dice[i] = (int) (Math.random() * 1000 % 6 + 1);
+        }
+        int min = dice[0];
+        for (int i = 1; i < dice.length; i++) {
+            if (min >= dice[i]) {
+                min = dice[i];
+            }
+        }
+        sum = dice[0] + dice[1] + dice[2] + dice[3] - min;
+        return sum;
+    }
+    public static int userInput(){
+        Scanner sc = new Scanner(System.in);
+
+            int attNum = sc.nextInt();
+            if (attNum <= 0) {
+                System.out.println("Error : Invalid Number");
+                System.exit(0);
+            }
+            return attNum;
+
+    }
+    public static int drop() {
+        int sum = 0;
+        int[] dice = new int[4];
+        for (int i = 0; i < dice.length; i++) {
+            dice[i] = (int) (Math.random() * 1000 % 6 + 1);
+        }
+        int min = dice[0];
+        for (int i = 1; i < dice.length; i++) {
+            if (min >= dice[i]) {
+                min = dice[i];
+            }
+        }
+        sum = dice[0] + dice[1] + dice[2] + dice[3] - min;
+        if (sum >= 16) {
+            sum += (int) (Math.random() * 1000 % 6 + 1);
+        }
+        return sum;
+    }
+    public static int[] IX(int[] r, int cha) {
+        int sum = 0;
+        r = new int[6];
+        int[] order = new int[6];
+        if (cha == 1) {
+            order = new int[]{9, 7, 8, 4, 6, 5};
+        } else if (cha == 2) {
+            order = new int[]{6, 8, 7, 4, 5, 9};
+        } else if (cha == 3) {
+            order = new int[]{6, 7, 8, 4, 9, 5};
+        } else if (cha == 4) {
+            order = new int[]{5, 7, 8, 4, 9, 6};
+        } else if (cha == 5) {
+            order = new int[]{9, 6, 8, 5, 7, 4};
+        } else if (cha == 6) {
+            order = new int[]{6, 9, 7, 5, 8, 4};
+        } else if (cha == 7) {
+            order = new int[]{8, 6, 7, 5, 4, 9};
+        } else if (cha == 8) {
+            order = new int[]{5, 9, 8, 6, 7, 4};
+        } else if (cha == 9) {
+            order = new int[]{4, 9, 8, 6, 7, 5};
+        } else if (cha == 10) {
+            order = new int[]{4, 8, 7, 6, 5, 9};
+        } else if (cha == 11) {
+            order = new int[]{5, 7, 8, 4, 6, 9};
+        } else {
+            order = new int[]{4, 6, 8, 9, 7, 5};
+        }
+        for (int i = 0; i < r.length; i++) {
+
+            ArrayList<Integer> dice = new ArrayList<>();
+            for (int j = 0; j < order[i]; j++) {
+                dice.add((int) (Math.random() * 1000 % 6 + 1));
+            }
+            int min = dice.get(0);
+            for (int j = 0; j < dice.size(); j++) {
+                min = j;
+                for (int k = 0; k < dice.size(); k++) {
+                    if (dice.get(k) > dice.get(min)) {
+                        min = k;
+                    }
+                }
+                int small = dice.get(min);
+                dice.set(min, dice.get(j));
+                dice.set(j, small);
+            }
+            for (int k = 0; k < 3; k++) {
+                sum += dice.get(k);
+            }
+            r[i] = sum;
+            sum = 0;
+        }
+        return r;
+    }
+}
+class Character{
+    String name;
+    int level;
+    String[]characterName;
+    int[] hitDice;
+    double hitPoints;
+    int[]attributes;
+    int[]attBonus;
+    int skillPoints;
+    double bAB;
+    double combat;
+    double damage;
+}
+class Skills {
+    String name;
+    String desc;
+    int rank;
+
+    Skills(String s, int i, String s1) {
+        name = s;
+        rank = i;
+        desc = s1;
+    }
+
+    public String toString() {
+        return "[" + name + " " + rank + "]" + "\n"+"Description : "+"\n    -"+ desc + "- ";
+    }
+}
+
+
+
